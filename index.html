@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200;300;400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "noir-bg": "#0a0a0a",
+              "noir-charcoal": "#121212",
+              "metallic-silver": "#e5e5e5",
+              "metallic-glow": "#ffffff",
+              "brand-accent": "#bfa07d"
+            },
+            fontFamily: {
+              "headline": ["Noto Serif"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-noir-bg text-stone-300 antialiased selection:bg-brand-accent selection:text-noir-bg;
+            }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+        .glass-header {
+            background-color: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .metallic-cta {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            background: linear-gradient(135deg, #222, #111);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 0 0px rgba(255,255,255,0);
+        }
+        .metallic-cta:hover {
+            border: 1px solid rgba(255,255,255,0.4);
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+        .sculptural-image {
+            filter: grayscale(20%) contrast(1.1);
+            transition: transform 0.5s ease, filter 0.8s ease;
+            transform-origin: center center;
+        }
+        .sculptural-image:hover {
+            filter: grayscale(0%) contrast(1.05);
+            transform: scale(1.1);
+        }
+        .text-glow {
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        #sword {
+            z-index: 20;
+            mix-blend-mode: screen;
+        }
+        #spark {
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            filter: blur(10px);
+        }
+        .arrow-animation {
+            display: inline-block;
+            animation: arrow-pulse 2s ease-in-out infinite;
+        }
+        .arrow-animation.arrow-left {
+            animation: arrow-pulse-left 2s ease-in-out infinite;
+        }
+        @keyframes arrow-pulse {
+            0%, 100% {
+                transform: translateX(0);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateX(10px);
+                opacity: 1;
+            }
+        }
+        @keyframes arrow-pulse-left {
+            0%, 100% {
+                transform: translateX(0) rotate(180deg);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateX(-10px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            max-width: 100vw;
+            height: 100vh;
+            background-color: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .cart-sidebar.open {
+            right: 0;
+        }
+        .cart-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .cart-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="font-body">
+<nav class="fixed top-0 w-full z-50 glass-header flex justify-between items-center px-8 md:px-16 py-6">
+<div class="text-2xl font-headline tracking-[0.3em] text-white">ЛЮБОВЬ</div>
+<div class="hidden md:flex items-center space-x-12">
+<a class="text-[10px] uppercase tracking-[0.4em] text-stone-500 hover:text-white transition-colors duration-500" href="#products">Коллекция</a>
+<a class="text-[10px] uppercase tracking-[0.4em] text-stone-500 hover:text-white transition-colors duration-500" href="#philosophy">О НАС</a>
+<a class="text-[10px] uppercase tracking-[0.4em] text-stone-500 hover:text-white transition-colors duration-500" href="#contact">Контакты</a>
+</div>
+<div class="flex items-center space-x-6">
+<button id="cart-btn" class="text-stone-400 hover:text-white transition-colors relative">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span id="cart-count" class="absolute -top-1 -right-1 bg-brand-accent text-noir-bg text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center opacity-0 transition-opacity">0</span>
+</button>
+</div>
+</nav>
+<main>
+<section class="relative h-screen flex items-center justify-center overflow-hidden bg-noir-bg">
+<div class="absolute inset-0 z-0 opacity-20">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoxSDYh5On-HXtMxltP5YjyVJw-Y0bLjdTfBUtZp1yJzDlHhkiCsbnA6x5H0QGkMlWzRV_g6_HrLEYo8w7BhCNtpfuHMXc0omrgLiLFVg_QGbR_WDguWYibmQWe7IB9mVJI30E7k13Mjl2SvRQIszaUPfTuDLmuGFjNYqyH1nQbQNALPh7pK3ipcin_lsXosYzpAugzJHRzo6AepQ0sPDqSjRHqhcPV9vJLvxBb6ZDgd42aDn9S05tLiMZ5xr8RTZYdIQ20alSHG3q"/>
+<div class="absolute inset-0 bg-gradient-to-b from-noir-bg via-transparent to-noir-bg"></div>
+</div>
+<div class="relative z-10 text-center px-6">
+<span class="font-label text-[10px] tracking-[0.6em] uppercase text-brand-accent mb-8 block opacity-70">Volume 01: Noir</span>
+<div class="relative inline-block">
+<h1 class="font-headline text-7xl md:text-9xl mb-10 tracking-widest text-white leading-none text-glow">ЛЮБОВЬ</h1>
+<img id="sword" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 md:w-96 opacity-0 pointer-events-none" src="меч.png" alt=""/>
+<div id="spark" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 pointer-events-none opacity-0"></div>
+</div>
+<!-- <p class="font-headline italic text-lg md:text-xl text-stone-400 max-w-xl mx-auto mb-16 leading-relaxed font-light">
+                больше, чем футболка
+            </p> -->
+<div class="flex justify-center">
+<!-- <a class="metallic-cta px-12 py-5 rounded-none text-white text-[10px] tracking-[0.5em] uppercase" href="#products">Enter Gallery</a> -->
+</div>
+</div>
+</section>
+<section class="py-32 bg-noir-bg" id="products">
+<div class="max-w-7xl mx-auto px-8">
+<div class="flex flex-col items-center mb-24 text-center">
+<span class="text-[10px] tracking-[0.5em] uppercase text-brand-accent mb-4 block">The Collection</span>
+<h2 class="font-headline text-5xl text-white mb-6">Scolopendra</h2>
+<div class="w-24 h-px bg-white/10"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
+<!-- Product 1: The Essential White -->
+<div class="group">
+<div class="relative aspect-[4/5] mb-8 overflow-hidden bg-stone-900">
+<img alt="The Essential White" class="w-full h-full object-contain p-4 sculptural-image" src="лево.png"/>
+<div class="absolute bottom-8 left-8 right-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+<button class="add-to-cart metallic-cta w-full py-4 text-white text-[10px] tracking-[0.4em] uppercase" data-id="1" data-name="The Essential White" data-price="1600">В КОРЗИНУ</button>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[9px] tracking-[0.3em] uppercase text-stone-500 mb-2 block">Scolopendra 01</span>
+<h3 class="font-headline text-2xl text-white mb-2">The Essential White</h3>
+</div>
+<div class="text-right">
+<span class="font-headline text-xl text-white">1600 руб.</span>
+</div>
+</div>
+<button class="md:hidden mt-6 add-to-cart metallic-cta w-full py-4 text-white text-[10px] tracking-[0.4em] uppercase" data-id="1" data-name="The Essential White" data-price="1600">В КОРЗИНУ</button>
+</div>
+<!-- Product 2: The Midnight Ribbed -->
+<div class="group">
+<div class="relative aspect-[4/5] mb-8 overflow-hidden bg-stone-900">
+<img alt="The Midnight Ribbed" class="w-full h-full object-contain p-4 sculptural-image" src="право.png"/>
+<div class="absolute bottom-8 left-8 right-8 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+<button class="add-to-cart metallic-cta w-full py-4 text-white text-[10px] tracking-[0.4em] uppercase" data-id="2" data-name="The Midnight Ribbed" data-price="1500">В КОРЗИНУ</button>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[9px] tracking-[0.3em] uppercase text-stone-500 mb-2 block">Scolopendra 02</span>
+<h3 class="font-headline text-2xl text-white mb-2">The Midnight Ribbed</h3>
+<p class="text-stone-500 text-xs italic font-light tracking-wide">ВЫБОР ПОКУПАТЕЛЕЙ</p>
+</div>
+<div class="text-right">
+<span class="font-headline text-xl text-white">1500 руб.</span>
+</div>
+</div>
+<button class="md:hidden mt-6 add-to-cart metallic-cta w-full py-4 text-white text-[10px] tracking-[0.4em] uppercase" data-id="2" data-name="The Midnight Ribbed" data-price="1500">В КОРЗИНУ</button>
+</div>
+</div>
+</div>
+</section>
+<section class="py-40 bg-noir-charcoal" id="philosophy">
+<div class="max-w-6xl mx-auto px-8">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-20 items-center">
+<div class="md:col-span-6 space-y-12">
+<div>
+<span class="text-[10px] tracking-[0.5em] uppercase text-brand-accent mb-6 block">The Manifesto</span>
+<h2 class="font-headline text-5xl md:text-7xl text-white mb-10 leading-tight">Philosophy of Tenderness</h2>
+</div>
+<div class="font-body text-stone-400 text-lg leading-relaxed space-y-8 font-light">
+<p>In the gallery of existence, we choose the silence of the whisper. ЛЮБОВЬ is our response to the ephemeral noise of fast fashion.</p>
+<p>True luxury lies in the intimacy of the unseen—the tactile poetry of high-density ribs and the quiet strength of monochrome architecture.</p>
+</div>
+</div>
+<div class="md:col-span-6 relative flex justify-center">
+<div class="w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden grayscale border border-white/10 p-2">
+<div class="w-full h-full rounded-full overflow-hidden">
+<img class="w-full h-full object-cover scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqaxwyiXqLeyVIK2MbsvEqTTvDQTMjTGJO3CYuGnp3h2yhsRm8TukfLu1Z6EXvbkEgMHroWXhoylbKNNSYIwQm6NuLpS6XDR558E4-rVzeh6mepfAAyxN5_2OfWEfxnd8QwCfzr3exgLZDVTtLGeat07PLQsaDjfN31-Uem3Mp8624ktozOjJ1s_xHpm67ObunzFk8HTapWHYHddlYqIL6uDCljOkq82I-NJnl4x1oAind51LF3jSURszM6d7h-ISj3iVxOvhdG53T"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-40 bg-noir-bg border-t border-white/5">
+<div class="max-w-3xl mx-auto px-8 text-center">
+<h2 class="font-headline text-4xl md:text-5xl text-white mb-6">ОФОРМЛЕНИЕ ЗАКАЗА</h2>
+<p class="font-body text-stone-500 mb-16 text-sm tracking-wide">Для оформления заказа перейдите по нажатию кнопки на наш телеграм канал и напишите нам</p>
+<div class="flex items-center justify-center gap-6">
+<button class="metallic-cta px-16 py-6 text-white text-[10px] tracking-[0.5em] uppercase" type="button">TELEGRAM</button>
+</div>
+</div>
+</section>
+</main>
+<footer id="contact" class="bg-noir-bg border-t border-white/5 py-24">
+<div class="max-w-7xl mx-auto px-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-16 mb-16">
+<div class="space-y-6 text-center md:text-left">
+<div class="text-xl font-headline tracking-[0.4em] text-white">ЛЮБОВЬ</div>
+<p class="text-stone-600 text-[10px] uppercase tracking-widest italic">A curation of silent luxury.</p>
+</div>
+<div class="flex flex-col items-center md:items-start space-y-4">
+<span class="text-[9px] tracking-[0.3em] uppercase text-brand-accent">Contact</span>
+<a class="text-[9px] tracking-[0.3em] uppercase text-stone-600 hover:text-white transition-all" href="mailto:contact@amour-noir.com">contact@amour-noir.com</a>
+<span class="text-[9px] tracking-[0.3em] uppercase text-stone-600">+7 (999) 000-00-00</span>
+</div>
+<div class="flex flex-wrap justify-center md:justify-end gap-12">
+<!-- <a class="text-[9px] tracking-[0.3em] uppercase text-stone-600 hover:text-white transition-all" href="#">Journal</a>
+<a class="text-[9px] tracking-[0.3em] uppercase text-stone-600 hover:text-white transition-all" href="#">Legal</a>
+<a class="text-[9px] tracking-[0.3em] uppercase text-stone-600 hover:text-white transition-all" href="#">Logistics</a> -->
+</div>
+</div>
+</div>
+<div class="max-w-7xl mx-auto px-8 mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-stone-700 text-[9px] tracking-[0.3em] uppercase">© 2024 ЛЮБОВЬ. Private Collection.</p>
+<div class="flex gap-6 text-stone-700">
+<!-- <span class="text-[9px] uppercase tracking-[0.2em]">London</span>
+<span class="text-[9px] uppercase tracking-[0.2em]">Paris</span> -->
+<span class="text-[9px] uppercase tracking-[0.2em]">Moscow</span>
+</div>
+</div>
+</footer>
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+<div class="flex justify-between items-center p-6 border-b border-white/10">
+<span class="text-[10px] uppercase tracking-[0.4em] text-white">Корзина</span>
+<button id="close-cart" class="text-stone-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+<!-- Товары будут добавлены здесь -->
+</div>
+<div class="p-6 border-t border-white/10">
+<div class="flex justify-between items-center mb-4">
+<span class="text-[10px] uppercase tracking-[0.3em] text-stone-500">Итого:</span>
+<span id="cart-total" class="font-headline text-xl text-white">0 руб.</span>
+</div>
+<button id="checkout-btn" class="metallic-cta w-full py-4 text-white text-[10px] tracking-[0.4em] uppercase">ОПЛАТИТЬ</button>
+</div>
+</div>
+<script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                const headerOffset = 100;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Telegram Mini App
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        // Применяем цвета темы Telegram
+        document.documentElement.style.setProperty('--tg-theme-bg-color', tg.backgroundColor || '#0a0a0a');
+        document.documentElement.style.setProperty('--tg-theme-text-color', tg.textColor || '#ffffff');
+        document.documentElement.style.setProperty('--tg-theme-button-color', tg.buttonColor || '#bfa07d');
+        document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.buttonTextColor || '#000000');
+        
+        // Адаптируем корзину под Telegram
+        const cartBtn = document.getElementById('cart-btn');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const closeCart = document.getElementById('close-cart');
+
+        function openCart() {
+            cartSidebar.classList.add('open');
+            cartOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCartFunc() {
+            cartSidebar.classList.remove('open');
+            cartOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        if (cartBtn) {
+            cartBtn.addEventListener('click', openCart);
+        }
+
+        if (closeCart) {
+            closeCart.addEventListener('click', closeCartFunc);
+        }
+
+        if (cartOverlay) {
+            cartOverlay.addEventListener('click', closeCartFunc);
+        }
+        
+        // Показываем кнопку "Главная" в Telegram
+        tg.MainButton.setText("ОФОРМИТЬ ЗАКАЗ");
+        tg.MainButton.onClick(function() {
+            // Здесь можно отправить данные заказа
+            tg.sendData("Заказ оформлен");
+        });
+    } else {
+        // Обычная корзина для веба
+        const cartBtn = document.getElementById('cart-btn');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const closeCart = document.getElementById('close-cart');
+
+        function openCart() {
+            cartSidebar.classList.add('open');
+            cartOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCartFunc() {
+            cartSidebar.classList.remove('open');
+            cartOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        if (cartBtn) {
+            cartBtn.addEventListener('click', openCart);
+        }
+
+        if (closeCart) {
+            closeCart.addEventListener('click', closeCartFunc);
+        }
+
+        if (cartOverlay) {
+            cartOverlay.addEventListener('click', closeCartFunc);
+        }
+    }
+
+    // Корзина
+    let cart = [];
+
+    function renderCart() {
+        const cartItems = document.getElementById('cart-items');
+        const cartTotal = document.getElementById('cart-total');
+        const cartCount = document.getElementById('cart-count');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        
+        if (!cartItems || !cartTotal) return;
+        
+        // Обновляем количество товаров на иконке
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        
+        if (cartCount) {
+            cartCount.textContent = totalItems;
+            cartCount.style.opacity = totalItems > 0 ? '1' : '0';
+        }
+        
+        cartItems.innerHTML = '';
+        
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<p class="text-stone-500 text-sm text-center py-8">Корзина пуста</p>';
+            cartTotal.textContent = '0 руб.';
+            if (checkoutBtn) checkoutBtn.disabled = true;
+            return;
+        }
+        
+        let total = 0;
+        
+        cart.forEach((item, index) => {
+            total += item.price * item.quantity;
+            
+            const itemElement = document.createElement('div');
+            itemElement.className = 'flex justify-between items-center py-4 border-b border-white/5';
+            itemElement.innerHTML = `
+                <div class="flex-1">
+                    <p class="text-white text-[10px] uppercase tracking-[0.2em]">${item.name}</p>
+                    <p class="text-stone-500 text-xs mt-1">${item.price} руб. × ${item.quantity}</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="cart-quantity-btn text-stone-400 hover:text-white" data-index="${index}" data-action="decrease">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">remove</span>
+                    </button>
+                    <span class="text-white text-sm">${item.quantity}</span>
+                    <button class="cart-quantity-btn text-stone-400 hover:text-white" data-index="${index}" data-action="increase">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                    </button>
+                    <button class="cart-remove-btn text-stone-400 hover:text-red-400 ml-3" data-index="${index}">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                    </button>
+                </div>
+            `;
+            cartItems.appendChild(itemElement);
+        });
+        
+        cartTotal.textContent = `${total} руб.`;
+        if (checkoutBtn) checkoutBtn.disabled = false;
+        
+        // Обновляем кнопку Telegram
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.MainButton) {
+            if (total > 0) {
+                window.Telegram.WebApp.MainButton.setText(`ОФОРМИТЬ ЗАКАЗ — ${total} руб.`);
+                window.Telegram.WebApp.MainButton.show();
+            } else {
+                window.Telegram.WebApp.MainButton.hide();
+            }
+        }
+    }
+
+    function addToCart(id, name, price) {
+        const existingItem = cart.find(item => item.id === id);
+        
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                id: id,
+                name: name,
+                price: parseInt(price),
+                quantity: 1
+            });
+        }
+        
+        renderCart();
+        openCart();
+        
+        // Анимация кнопки корзины
+        const cartBtn = document.getElementById('cart-btn');
+        if (cartBtn) {
+            cartBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                cartBtn.style.transform = 'scale(1)';
+            }, 200);
+        }
+    }
+
+    // Обработчики кнопок добавления в корзину
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const price = this.dataset.price;
+            
+            if (id && name && price) {
+                addToCart(id, name, price);
+            }
+        });
+    });
+
+    // Обработчики изменения количества и удаления
+    document.getElementById('cart-items')?.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.cart-remove-btn');
+        const quantityBtn = e.target.closest('.cart-quantity-btn');
+        
+        if (removeBtn) {
+            const index = parseInt(removeBtn.dataset.index);
+            cart.splice(index, 1);
+            renderCart();
+        }
+        
+        if (quantityBtn) {
+            const index = parseInt(quantityBtn.dataset.index);
+            const action = quantityBtn.dataset.action;
+            
+            if (action === 'increase') {
+                cart[index].quantity += 1;
+            } else if (action === 'decrease') {
+                cart[index].quantity -= 1;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+            }
+            renderCart();
+        }
+    });
+
+    // Инициализация корзины
+    renderCart();
+</script>
+</body></html>
